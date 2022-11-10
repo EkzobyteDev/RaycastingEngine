@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>RaycastingEngine.Core</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="OpenTK">
+      <HintPath>bin\Debug\net6.0\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="sfml-audio">
+      <HintPath>bin\Debug\net6.0\sfml-audio.dll</HintPath>
+    </Reference>
+    <Reference Include="sfml-graphics">
+      <HintPath>bin\Debug\net6.0\sfml-graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="sfml-system">
+      <HintPath>bin\Debug\net6.0\sfml-system.dll</HintPath>
+    </Reference>
+    <Reference Include="sfml-window">
+      <HintPath>bin\Debug\net6.0\sfml-window.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
