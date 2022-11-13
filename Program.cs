@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SFML.System;
+﻿using SFML.System;
 using SFML.Window;
 using SFML.Graphics;
 
 #pragma warning disable CS8618
 namespace RaycastingEngine
 {
-    internal class Core
+    internal class Core2
     {
         static RenderWindow window;
-        static Vector2u windowSize = new Vector2u(1080, 720);
+        static Vector2u windowSize = new Vector2u(1920, 1080);
 
-        static void Main()
+        static void Maein()
         {
-            RenderWindow window = new RenderWindow(new VideoMode(windowSize.X, windowSize.Y), "Raycasting Engine");
+            window = new RenderWindow(new VideoMode(windowSize.X, windowSize.Y), "Raycasting Engine", Styles.Fullscreen);
             window.Closed += (object sender, EventArgs e) => window.Close();
 
 
@@ -32,7 +27,7 @@ namespace RaycastingEngine
 
             while (window.IsOpen)
             {
-                if (++a >= 2500)
+                if (++a >= 3000)
                 {
                     Calculate();
                     a = 0;
@@ -40,9 +35,9 @@ namespace RaycastingEngine
 
                 window.DispatchEvents();
                 window.Clear(Color.Black);
-                window.Draw(circle);
                 window.Draw(line);
                 window.Draw(ray);
+                window.Draw(circle);
                 window.Display();
             }
 
@@ -50,10 +45,6 @@ namespace RaycastingEngine
             {
                 line.Clear();
                 ray.Clear();
-
-                Vector2f dir = new Vector2f(random.Next((int)windowSize.X), random.Next((int)windowSize.Y));
-                float l = (float)Math.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
-                dir = new Vector2f(dir.X / l, dir.Y / l);
 
                 Vector2f p1 = new Vector2f(random.Next((int)windowSize.X), random.Next((int)windowSize.Y));
                 Vector2f p2 = new Vector2f(random.Next((int)windowSize.X), random.Next((int)windowSize.Y));
@@ -77,9 +68,9 @@ namespace RaycastingEngine
                 else circle.FillColor = Color.Red;
 
                 circle.Position = new Vector2f(p1.X + n * (p2.X - p1.X), p1.Y + n * (p2.Y - p1.Y));
-                circle.Position = circle.Position - new Vector2f(5, 5);
+                circle.Position = circle.Position - new Vector2f(7, 7);
 
-                circle.Radius = 5;
+                circle.Radius = 7;
             }
         }
     }
