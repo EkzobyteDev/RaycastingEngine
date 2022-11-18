@@ -22,17 +22,18 @@ namespace RaycastingEngine
         {
             camera = new Camera();
 
-            camera.fov = 90;
-            camera.pos = new Vector2f(1000, 500);
+            camera.fov = 45;
+            camera.pos = new Vector2f(0, 0);
             camera.rot = 0;
             camera.resolution = windowSize;
-            camera.renderDist = 200;
+            camera.renderDist = 5;
 
             scene = new Scene();
             scene.meshes = new Mesh[1];
-            scene.meshes[0] = new Mesh(2);
-            scene.meshes[0].edges[0] = new Edge(new Vector2f(3, 0), new Vector2f(6, 2));
-            scene.meshes[0].edges[1] = new Edge(new Vector2f(3, 0), new Vector2f(6, -2));
+            scene.meshes[0] = new Mesh(3);
+            scene.meshes[0].edges[0] = new Edge(new Vector2f(1, 0), new Vector2f(2, 1));
+            scene.meshes[0].edges[1] = new Edge(new Vector2f(2, 1), new Vector2f(2, -1));
+            scene.meshes[0].edges[2] = new Edge(new Vector2f(2, -1), new Vector2f(1, 0));
 
 
             window = new RenderWindow(new VideoMode(windowSize.X, windowSize.Y), "Raycasting Engine", Styles.Fullscreen);
@@ -41,15 +42,34 @@ namespace RaycastingEngine
             sprite = new Sprite(texture);
 
             window.Closed += (object sender, EventArgs e) => window.Close();
+            window.SetMouseCursorVisible(false);
 
             float t = 0;
+            Vector2i defaultMousePos = (Vector2i)(windowSize / 2);
+            Vector2f inputDir;
+
             while (window.IsOpen)
             {
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Escape)) window.Close();
+
+                if (Keyboard.IsKeyPressed(Keyboard.Key.D)) inputDir.X = 1;
+                else if (Keyboard.IsKeyPressed(Keyboard.Key.A)) inputDir.X = -1;
+                else inputDir.X = 0;
+                if (Keyboard.IsKeyPressed(Keyboard.Key.W)) inputDir.Y = -1;
+                else if (Keyboard.IsKeyPressed(Keyboard.Key.S)) inputDir.Y = 1;
+                else inputDir.Y = 0;
+                camera.pos += inputDir / 20;
+
+
+                float mouseDelta = Mouse.GetPosition().X - defaultMousePos.X;
+                Mouse.SetPosition(defaultMousePos);
+                camera.rot += mouseDelta / 7.5f;
                 t += 0.01f;
                 window.Clear();
+                image = camera.Render(scene);
                 texture.Update(image.Pixels);
+                window.Draw(sprite);
 
-                window.Draw(camera.Render(scene));
                 window.Display();
                 window.DispatchEvents();
             }
