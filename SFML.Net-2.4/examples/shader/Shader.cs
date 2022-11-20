@@ -94,7 +94,7 @@ namespace shader
     {
         public WaveBlur() : base("wave + blur")
         {
-            // Create the text
+            // CreateScene the text
             myText = new Text
             {
                 DisplayedString = "Praesent suscipit augue in velit pulvinar hendrerit varius purus aliquam.\n" +
@@ -151,7 +151,7 @@ namespace shader
         {
             Random random = new Random();
 
-            // Create the points
+            // CreateScene the points
             myPoints = new VertexArray(PrimitiveType.Points);
             for (int i = 0; i < 40000; ++i)
             {
@@ -192,7 +192,7 @@ namespace shader
     {
         public Edge() : base("edge post-effect")
         {
-            // Create the off-screen surface
+            // CreateScene the off-screen surface
             mySurface = new RenderTexture(800, 600)
             {
                 Smooth = true
@@ -275,7 +275,7 @@ namespace shader
         /// </summary>
         static void Main()
         {
-            // Create the main window
+            // CreateScene the main window
             var window = new RenderWindow(new VideoMode(800, 600), "SFML.Net Shader");
             window.SetVerticalSyncEnabled(true);
 
@@ -287,7 +287,7 @@ namespace shader
             var font = new Font("resources/sansation.ttf");
             Effect.SetFont(font);
 
-            // Create the effects
+            // CreateScene the effects
             effects = new Effect[]
             {
                 new Pixelate(),
@@ -297,7 +297,7 @@ namespace shader
             };
             current = 0;
 
-            // Create the messages background
+            // CreateScene the messages background
             var textBackgroundTexture = new Texture("resources/text-background.png");
             var textBackground = new Sprite(textBackgroundTexture)
             {
@@ -305,14 +305,14 @@ namespace shader
                 Color = new Color(255, 255, 255, 200)
             };
 
-            // Create the description text
+            // CreateScene the description text
             description = new Text("Current effect: " + effects[current].Name, font, 20)
             {
                 Position = new Vector2f(10, 530),
                 FillColor = new Color(80, 80, 80)
             };
 
-            // Create the instructions text
+            // CreateScene the instructions text
             var instructions = new Text("Press left and right arrows to change the current shader", font, 20)
             {
                 Position = new Vector2f(280, 555),

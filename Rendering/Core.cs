@@ -16,62 +16,80 @@ namespace RaycastingEngine
         static Texture texture;
         static Sprite sprite;
 
-        static Scene scene;
+        static SceneImporter sceneImporter;
+        static CameraMovement cameraMovement;
 
         static void Main()
         {
+            #region Создание камеры
+
             camera = new Camera();
 
             camera.fov = 45;
-            camera.pos = new Vector2f(0, 0);
+            camera.pos = new AVector2f(0, 0);
             camera.rot = 0;
             camera.resolution = windowSize;
-            camera.renderDist = 5;
+            camera.renderDist = 100;
 
-            scene = new Scene();
-            scene.meshes = new Mesh[1];
-            scene.meshes[0] = new Mesh(3);
-            scene.meshes[0].edges[0] = new Edge(new Vector2f(1, 0), new Vector2f(2, 1));
-            scene.meshes[0].edges[1] = new Edge(new Vector2f(2, 1), new Vector2f(2, -1));
-            scene.meshes[0].edges[2] = new Edge(new Vector2f(2, -1), new Vector2f(1, 0));
+            cameraMovement = new CameraMovement(camera);
 
+            #endregion
+            #region Создание окна
 
             window = new RenderWindow(new VideoMode(windowSize.X, windowSize.Y), "Raycasting Engine", Styles.Fullscreen);
+            window.Closed += (object sender, EventArgs e) => window.Close();
+            window.SetMouseCursorVisible(false);
+
+            bool inFocus = true;
+            window.LostFocus += (object? sender, EventArgs e) => inFocus = false;
+            window.GainedFocus += (object? sender, EventArgs e) => inFocus = true;
+
+            #endregion
+            #region Создание сцены
+
+            sceneImporter = new SceneImporter();
+            sceneImporter.CreateScene();
+            Mesh cube = sceneImporter.scene.meshes[0];
+
+            #endregion
+
             image = new Image(windowSize.X, windowSize.Y);
             texture = new Texture(image);
             sprite = new Sprite(texture);
 
-            window.Closed += (object sender, EventArgs e) => window.Close();
-            window.SetMouseCursorVisible(false);
-
-            float t = 0;
-            Vector2i defaultMousePos = (Vector2i)(windowSize / 2);
-            Vector2f inputDir;
+            Clock clock = new Clock();
+            clock.Restart();
+            float deltaTime = 0; // Время, за которое рендерится кадр
+            float time;
 
             while (window.IsOpen)
             {
+                window.DispatchEvents();
+                if (!inFocus) continue;
+
+                time = clock.ElapsedTime.AsSeconds();
                 if (Keyboard.IsKeyPressed(Keyboard.Key.Escape)) window.Close();
 
-                if (Keyboard.IsKeyPressed(Keyboard.Key.D)) inputDir.X = 1;
-                else if (Keyboard.IsKeyPressed(Keyboard.Key.A)) inputDir.X = -1;
-                else inputDir.X = 0;
-                if (Keyboard.IsKeyPressed(Keyboard.Key.W)) inputDir.Y = -1;
-                else if (Keyboard.IsKeyPressed(Keyboard.Key.S)) inputDir.Y = 1;
-                else inputDir.Y = 0;
-                camera.pos += inputDir / 20;
+                #region Обновление сцены
 
+                cube.rot = time * 45;
+                sceneImporter.scene.meshes[2].pos.x = (float)Math.Sin(time) * 2 + 1.5f;
 
-                float mouseDelta = Mouse.GetPosition().X - defaultMousePos.X;
-                Mouse.SetPosition(defaultMousePos);
-                camera.rot += mouseDelta / 7.5f;
-                t += 0.01f;
-                window.Clear();
-                image = camera.Render(scene);
+                #endregion
+
+                cameraMovement.Update(deltaTime);
+
+                RenderAndDisplay();
+
+                deltaTime = (clock.ElapsedTime.AsSeconds() - time);
+            }
+            void RenderAndDisplay()
+            {
+                image = camera.Render(sceneImporter.scene);
                 texture.Update(image.Pixels);
                 window.Draw(sprite);
 
                 window.Display();
-                window.DispatchEvents();
             }
         }
     }

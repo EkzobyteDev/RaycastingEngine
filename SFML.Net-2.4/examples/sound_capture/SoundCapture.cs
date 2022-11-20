@@ -59,7 +59,7 @@ namespace sound_capture
             }
             else
             {
-                // Create a sound instance and play it
+                // CreateScene a sound instance and play it
                 Sound sound = new Sound(buffer);
                 sound.Play();
 

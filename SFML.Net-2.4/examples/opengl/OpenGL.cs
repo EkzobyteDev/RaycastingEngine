@@ -21,7 +21,7 @@ namespace opengl
             var contextSettings = new ContextSettings();
             contextSettings.DepthBits = 24;
 
-            // Create the main window
+            // CreateScene the main window
             RenderWindow window = new RenderWindow(new VideoMode(800, 600), "SFML graphics with OpenGL", Styles.Default, contextSettings);
             window.SetVerticalSyncEnabled(true);
 
@@ -35,10 +35,10 @@ namespace opengl
             window.KeyPressed += new EventHandler<KeyEventArgs>(OnKeyPressed);
             window.Resized += new EventHandler<SizeEventArgs>(OnResized);
 
-            // Create a sprite for the background
+            // CreateScene a sprite for the background
             var background = new Sprite(new Texture("resources/background.jpg"));
 
-            // Create a text to display on top of the OpenGL object
+            // CreateScene a text to display on top of the OpenGL object
             var text = new Text("SFML / OpenGL demo", new Font("resources/sansation.ttf"));
             text.Position = new Vector2f(250, 450);
             text.FillColor = new SFML.Graphics.Color(255, 255, 255, 170);

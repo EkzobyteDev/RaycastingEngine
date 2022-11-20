@@ -33,7 +33,7 @@ namespace sound
             Console.WriteLine(" " + buffer.SampleRate + " samples / sec");
             Console.WriteLine(" " + buffer.ChannelCount + " channels");
 
-            // Create a sound instance and play it
+            // CreateScene a sound instance and play it
             Sound sound = new Sound(buffer);
             sound.Play();
 

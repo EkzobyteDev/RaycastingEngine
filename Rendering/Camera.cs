@@ -7,22 +7,26 @@ namespace RaycastingEngine
 {
     public class Camera
     {
-        public Vector2f pos;
+        // Физические параметры камеры
+        public AVector2f pos;
         public float rot;
 
+        // Параметры, отвечающие за отрисовку
         internal Vector2u resolution;
         internal float fov;
         internal float renderDist;
 
-
         public Camera() { }
-        public Camera(Vector2f pos, float rot)
+        public Camera(AVector2f pos, float rot)
         {
             this.pos = pos;
             this.rot = rot;
         }
-        public Camera(Vector2f pos, float rot, Vector2u resolution) : this(pos, rot) => this.resolution = resolution;
-        public Camera(Vector2f pos, float rot, Vector2u resolution, float fov, float renderDist) : this(pos, rot, resolution)
+        public Camera(AVector2f pos, float rot, Vector2u resolution) : this(pos, rot)
+        {
+            this.resolution = resolution;
+        }
+        public Camera(AVector2f pos, float rot, Vector2u resolution, float fov, float renderDist) : this(pos, rot, resolution)
         {
             this.fov = fov;
             this.renderDist = renderDist;
@@ -30,19 +34,22 @@ namespace RaycastingEngine
 
         internal Image Render(Scene scene)
         {
+            #region Подготовка некоторых полей
             Image renderedImage = new Image(resolution.X, resolution.Y);
 
-            Vector2f norm = Rotate(new Vector2f(1, 0), rot); // Camera look in the direction of this vector
+            AVector2f norm = MathV.Rotate(AVector2f.right, rot); // Camera look in the direction of this vector
 
             // r и l - точки, между которыми смотрит камера
-            Vector2f r = Normalize(Rotate(norm, fov / 2)) * renderDist + pos;
-            Vector2f l = Normalize(Rotate(norm, 360 - (fov / 2))) * renderDist + pos;
+            AVector2f r = MathV.Rotate(norm, fov / 2).normalized * renderDist + pos;
+            AVector2f l = MathV.Rotate(norm, 360 - (fov / 2)).normalized * renderDist + pos;
+            #endregion
 
             for (int x = 0; x < resolution.X; x++)
             {
+                #region Нахождение точек пересечения с объектами на сцене и получение некоторых важных параметров
                 // p1 и p2 - крайние точки, "луча", который мы пускаем
-                Vector2f p1 = pos;
-                Vector2f p2 = (r - l) * (((float)x / (float)resolution.X) - (1 / ((float)resolution.X * 2))) + l;
+                AVector2f p1 = pos;
+                AVector2f p2 = (r - l) * (((float)x / (float)resolution.X) - (1 / ((float)resolution.X * 2))) + l;
 
                 float minDist = float.PositiveInfinity;
 
@@ -50,52 +57,62 @@ namespace RaycastingEngine
                 {
                     foreach (Edge edge in mesh.edges)
                     {
-                        Vector2f p3 = edge.p1;
-                        Vector2f p4 = edge.p2;
+                        AVector2f p3 = MathV.Rotate(edge.p1, mesh.rot) + mesh.pos;
+                        AVector2f p4 = MathV.Rotate(edge.p2, mesh.rot) + mesh.pos;
 
-                        float n = ((p4.X - p3.X) * (p1.Y - p3.Y) - (p4.Y - p3.Y) * (p1.X - p3.X)) /
-                                  ((p2.X - p1.X) * (p4.Y - p3.Y) - (p2.Y - p1.Y) * (p4.X - p3.X));
+                        // n и m - множители, подставив которые в уравнения прямых, получим точку на них
+                        float n = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) /
+                                  ((p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x));
 
-                        float m = ((p2.X - p1.X) * (p1.Y - p3.Y) - (p2.Y - p1.Y) * (p1.X - p3.X)) /
-                                  ((p2.X - p1.X) * (p4.Y - p3.Y) - (p2.Y - p1.Y) * (p4.X - p3.X));
+                        float m = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) /
+                                  ((p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x));
+
 
                         // принадлежит ли точка пересечения "лучу" и ребру
                         if (n < 0 || n > 1 || m < 0 || m > 1) continue;
-                        Vector2f intersectionPoint = new Vector2f(p1.X + n * (p2.X - p1.X), p1.Y + n * (p2.Y - p1.Y));
 
-                        float dist = Length(intersectionPoint - pos);
+                        AVector2f intersectionPoint = new AVector2f(p1.x + n * (p2.x - p1.x), p1.y + n * (p2.y - p1.y));
+                        float dist = (intersectionPoint - pos).length;
 
+                        // Находим минимальную точку пересечения
                         if (dist < minDist) minDist = dist;
                     }
                 }
+                // Умножаем дистанцию до объекта на косинус угла между лучом и направлением взгляда камеры.
+                // Нужно, чтобы избавиться от эффекта "рыбьего глаза"
+                if (minDist >= 0 && minDist <= float.PositiveInfinity)
+                {
+                    float cos = MathV.Cos(p2, norm);
+                    if (cos > 0) minDist *= cos;
+                }
 
+                // Если будет меньше 0, то будут возникать артефакты
+                minDist = Math.Clamp(minDist, 1, float.PositiveInfinity);
+                float invDist = 1 / minDist;
+                #endregion
+
+                #region Отрисовка изображения на основе полученных данных
                 // height - это высота (в пикселях) столбца, который будет отрисован на экране
-                float height;
+                int height;
 
-                if (minDist == float.PositiveInfinity) height = 0;
-                else height = -1080 * (minDist / renderDist) + 1080;
+                if (minDist == renderDist) height = 0; // Не попали ни в один объект
+                else height = (int)(resolution.Y * invDist);
 
                 // gap - это высота пустоты (в пикселях)
-                float gap = (resolution.Y - height) / 2;
+                int gap = (int)((resolution.Y - height) / 2);
 
-                for (int y = (int)gap; y < (int)(gap + height); y++)
+                // Самое простое затенение. Чем объект дальше, тем он темнее
+                byte channel = (byte)Math.Clamp(255 * invDist + 25, 0, 255);
+                Color color = new Color(channel, channel, channel);
+
+                //Вывод столбца в текстуру
+                for (int y = gap; y < gap + height; y++)
                 {
-                    renderedImage.SetPixel((uint)x, (uint)y, Color.White);
+                    renderedImage.SetPixel((uint)x, (uint)y, color);
                 }
+                #endregion
             }
             return renderedImage;
         }
-
-        float Length(Vector2f a) => (float)Math.Sqrt(a.X * a.X + a.Y * a.Y);
-        Vector2f Rotate(Vector2f a, float angle)
-        {
-            Vector2f b = new Vector2f();
-            angle *= (float)(Math.PI / 180);
-            b.X = (float)(a.X * Math.Cos(angle) - a.Y * Math.Sin(angle));
-            b.Y = (float)(a.Y * Math.Cos(angle) + a.X * Math.Sin(angle));
-
-            return b;
-        }
-        Vector2f Normalize(Vector2f a) => new Vector2f(a.X / Length(a), a.Y / Length(a));
     }
 }
