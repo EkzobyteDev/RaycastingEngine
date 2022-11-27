@@ -16,6 +16,8 @@ namespace RaycastingEngine
         internal float fov;
         internal float renderDist;
 
+        internal bool expandTextures = true;
+
         public Camera() { }
         public Camera(AVector2f pos, float rot)
         {
@@ -32,10 +34,18 @@ namespace RaycastingEngine
             this.renderDist = renderDist;
         }
 
+        Texture floorTex;
+        Image floorImg;
+
         internal Image Render(Scene scene)
         {
+            Image returnImage = new Image(resolution.X, resolution.Y);
             #region Подготовка некоторых полей
-            Image renderedImage = new Image(resolution.X, resolution.Y);
+            if (floorImg == null)
+            {
+                floorTex = new Texture("D:/Projects/Git/RaycastingEngine/Scene/Textures/StoneFloor_3.jpg");
+                floorImg = new Image(floorTex.CopyToImage());
+            }
 
             AVector2f norm = MathV.Rotate(AVector2f.right, rot); // Camera look in the direction of this vector
 
@@ -44,12 +54,13 @@ namespace RaycastingEngine
             AVector2f l = MathV.Rotate(norm, 360 - (fov / 2)).normalized * renderDist + pos;
             #endregion
 
-            for (int x = 0; x < resolution.X; x++)
+            Parallel.For(0, resolution.X, (x) =>
             {
                 #region Нахождение точек пересечения с объектами на сцене и получение некоторых важных параметров
                 // p1 и p2 - крайние точки, "луча", который мы пускаем
                 AVector2f p1 = pos;
                 AVector2f p2 = (r - l) * (((float)x / (float)resolution.X) - (1 / ((float)resolution.X * 2))) + l;
+                float minM = 0;
 
                 float minDist = float.PositiveInfinity;
 
@@ -57,8 +68,8 @@ namespace RaycastingEngine
                 {
                     foreach (Edge edge in mesh.edges)
                     {
-                        AVector2f p3 = MathV.Rotate(edge.p1, mesh.rot) + mesh.pos;
-                        AVector2f p4 = MathV.Rotate(edge.p2, mesh.rot) + mesh.pos;
+                        AVector2f p3 = MathV.Rotate(mesh.points[edge.p1], mesh.rot) + mesh.pos;
+                        AVector2f p4 = MathV.Rotate(mesh.points[edge.p2], mesh.rot) + mesh.pos;
 
                         // n и m - множители, подставив которые в уравнения прямых, получим точку на них
                         float n = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) /
@@ -75,7 +86,11 @@ namespace RaycastingEngine
                         float dist = (intersectionPoint - pos).length;
 
                         // Находим минимальную точку пересечения
-                        if (dist < minDist) minDist = dist;
+                        if (dist < minDist)
+                        {
+                            minDist = dist;
+                            minM = expandTextures ? m * (p4 - p3).length : m;
+                        }
                     }
                 }
                 // Умножаем дистанцию до объекта на косинус угла между лучом и направлением взгляда камеры.
@@ -100,19 +115,23 @@ namespace RaycastingEngine
 
                 // gap - это высота пустоты (в пикселях)
                 int gap = (int)((resolution.Y - height) / 2);
+                gap = (int)Math.Clamp(gap, 0, resolution.Y);
 
                 // Самое простое затенение. Чем объект дальше, тем он темнее
-                byte channel = (byte)Math.Clamp(255 * invDist + 25, 0, 255);
-                Color color = new Color(channel, channel, channel);
+                float channel = Math.Clamp(invDist, 0, 1);
 
                 //Вывод столбца в текстуру
                 for (int y = gap; y < gap + height; y++)
                 {
-                    renderedImage.SetPixel((uint)x, (uint)y, color);
+                    float Pixelx = expandTextures ? floorImg.Size.X * minM % floorImg.Size.X : floorImg.Size.X * minM;
+
+                    Color color = floorImg.GetPixel((uint)Pixelx, (uint)((float)floorImg.Size.Y / (float)height * (float)(y - gap)));
+                    color = new Color((byte)((float)color.R * channel), (byte)((float)color.G * channel), (byte)((float)color.B * channel));
+                    returnImage.SetPixel((uint)x, (uint)y, color);
                 }
                 #endregion
-            }
-            return renderedImage;
+            });
+            return returnImage;
         }
     }
 }

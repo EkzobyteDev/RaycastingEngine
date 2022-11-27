@@ -6,6 +6,8 @@ namespace RaycastingEngine
     {
         internal AVector2f pos;
         internal float rot;
+
+        internal AVector2f[] points;
         internal Edge[] edges;
 
         public Mesh(int edgeCount)
@@ -15,9 +17,9 @@ namespace RaycastingEngine
     }
     internal class Edge
     {
-        internal AVector2f p1, p2;
+        internal int p1, p2;
 
-        public Edge(AVector2f p1, AVector2f p2)
+        public Edge(int p1, int p2)
         {
             this.p1 = p1;
             this.p2 = p2;

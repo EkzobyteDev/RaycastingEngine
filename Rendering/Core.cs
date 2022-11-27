@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SFML.Window;
 using SFML.Graphics;
+using SFML.Audio;
 
 
 #pragma warning disable CS8618
@@ -59,8 +60,11 @@ namespace RaycastingEngine
 
             Clock clock = new Clock();
             clock.Restart();
-            float deltaTime = 0; // Время, за которое рендерится кадр
+            float deltaTime = 0; // Время, за которое рендерится кдр
             float time;
+
+            Music music = new Music("D:/Projects/Git/RaycastingEngine/Scene/Sounds/Music.wav");
+            //music.Play();
 
             while (window.IsOpen)
             {
@@ -86,7 +90,8 @@ namespace RaycastingEngine
             void RenderAndDisplay()
             {
                 image = camera.Render(sceneImporter.scene);
-                texture.Update(image.Pixels);
+                texture.Update(image);
+                sprite.Texture = texture;
                 window.Draw(sprite);
 
                 window.Display();
