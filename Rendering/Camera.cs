@@ -8,21 +8,22 @@ namespace RaycastingEngine
     public class Camera
     {
         // Физические параметры камеры
-        public AVector2f pos;
-        public float rot;
+        public AVector2f position;
+        public float rotation;
+        internal Vector2f size;
 
         // Параметры, отвечающие за отрисовку
         internal Vector2u resolution;
         internal float fov;
         internal float renderDist;
 
-        internal bool expandTextures = true;
+        internal bool expandTextures = false;
 
         public Camera() { }
         public Camera(AVector2f pos, float rot)
         {
-            this.pos = pos;
-            this.rot = rot;
+            this.position = pos;
+            this.rotation = rot;
         }
         public Camera(AVector2f pos, float rot, Vector2u resolution) : this(pos, rot)
         {
@@ -34,42 +35,35 @@ namespace RaycastingEngine
             this.renderDist = renderDist;
         }
 
-        Texture floorTex;
-        Image floorImg;
-
         internal Image Render(Scene scene)
         {
             Image returnImage = new Image(resolution.X, resolution.Y);
-            #region Подготовка некоторых полей
-            if (floorImg == null)
-            {
-                floorTex = new Texture("D:/Projects/Git/RaycastingEngine/Scene/Textures/StoneFloor_3.jpg");
-                floorImg = new Image(floorTex.CopyToImage());
-            }
 
-            AVector2f norm = MathV.Rotate(AVector2f.right, rot); // Camera look in the direction of this vector
+            #region Подготовка некоторых полей
+            AVector2f norm = MathV.Rotate(AVector2f.right, rotation); // Camera look in the direction of this vector
 
             // r и l - точки, между которыми смотрит камера
-            AVector2f r = MathV.Rotate(norm, fov / 2).normalized * renderDist + pos;
-            AVector2f l = MathV.Rotate(norm, 360 - (fov / 2)).normalized * renderDist + pos;
+            AVector2f r = MathV.Rotate(norm, fov / 2).normalized * renderDist + position;
+            AVector2f l = MathV.Rotate(norm, 360 - (fov / 2)).normalized * renderDist + position;
             #endregion
 
             Parallel.For(0, resolution.X, (x) =>
             {
                 #region Нахождение точек пересечения с объектами на сцене и получение некоторых важных параметров
                 // p1 и p2 - крайние точки, "луча", который мы пускаем
-                AVector2f p1 = pos;
+                AVector2f p1 = position;
                 AVector2f p2 = (r - l) * (((float)x / (float)resolution.X) - (1 / ((float)resolution.X * 2))) + l;
                 float minM = 0;
 
                 float minDist = float.PositiveInfinity;
+                Image image = scene.defaultImg;
 
                 foreach (Mesh mesh in scene.meshes)
                 {
                     foreach (Edge edge in mesh.edges)
                     {
-                        AVector2f p3 = MathV.Rotate(mesh.points[edge.p1], mesh.rot) + mesh.pos;
-                        AVector2f p4 = MathV.Rotate(mesh.points[edge.p2], mesh.rot) + mesh.pos;
+                        AVector2f p3 = MathV.Rotate(mesh.points[edge.p1], mesh.rotation) * mesh.scale + mesh.position;
+                        AVector2f p4 = MathV.Rotate(mesh.points[edge.p2], mesh.rotation) * mesh.scale + mesh.position;
 
                         // n и m - множители, подставив которые в уравнения прямых, получим точку на них
                         float n = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) /
@@ -83,26 +77,23 @@ namespace RaycastingEngine
                         if (n < 0 || n > 1 || m < 0 || m > 1) continue;
 
                         AVector2f intersectionPoint = new AVector2f(p1.x + n * (p2.x - p1.x), p1.y + n * (p2.y - p1.y));
-                        float dist = (intersectionPoint - pos).length;
+                        float dist = (intersectionPoint - position).length;
 
                         // Находим минимальную точку пересечения
                         if (dist < minDist)
                         {
                             minDist = dist;
-                            minM = expandTextures ? m * (p4 - p3).length : m;
+                            minM = expandTextures ? m : m * (p4 - p3).length;
+                            image = scene.images[mesh.textureName];
                         }
                     }
                 }
                 // Умножаем дистанцию до объекта на косинус угла между лучом и направлением взгляда камеры.
                 // Нужно, чтобы избавиться от эффекта "рыбьего глаза"
-                if (minDist >= 0 && minDist <= float.PositiveInfinity)
-                {
-                    float cos = MathV.Cos(p2, norm);
-                    if (cos > 0) minDist *= cos;
-                }
+                minDist = Math.Clamp(minDist, 0.01f, float.PositiveInfinity);
+                float cos = MathV.Cos(p2, norm);
+                if (cos > 0) minDist *= cos;
 
-                // Если будет меньше 0, то будут возникать артефакты
-                minDist = Math.Clamp(minDist, 1, float.PositiveInfinity);
                 float invDist = 1 / minDist;
                 #endregion
 
@@ -115,23 +106,44 @@ namespace RaycastingEngine
 
                 // gap - это высота пустоты (в пикселях)
                 int gap = (int)((resolution.Y - height) / 2);
-                gap = (int)Math.Clamp(gap, 0, resolution.Y);
-
-                // Самое простое затенение. Чем объект дальше, тем он темнее
-                float channel = Math.Clamp(invDist, 0, 1);
 
                 //Вывод столбца в текстуру
-                for (int y = gap; y < gap + height; y++)
-                {
-                    float Pixelx = expandTextures ? floorImg.Size.X * minM % floorImg.Size.X : floorImg.Size.X * minM;
 
-                    Color color = floorImg.GetPixel((uint)Pixelx, (uint)((float)floorImg.Size.Y / (float)height * (float)(y - gap)));
-                    color = new Color((byte)((float)color.R * channel), (byte)((float)color.G * channel), (byte)((float)color.B * channel));
+                for (int y = 0; y < resolution.Y; y++)
+                {
+                    Color color = Color.Black;
+                    // Стены
+                    if (y >= gap && y <= gap + height)
+                    {
+                        // Самое простое затенение. Чем объект дальше, тем он темнее
+                        float channel = Math.Clamp(invDist * scene.lightIntensity, 0, 1);
+
+                        float Pixelx = expandTextures ? image.Size.X * minM : (image.Size.X * minM) % image.Size.X;
+                        float Pixely = ((float)image.Size.Y / (float)height * (float)(y - gap)) % image.Size.Y;
+                        color = image.GetPixel((uint)Pixelx, (uint)Pixely);
+                        color = Multiply(color, channel);
+
+                    }
+
+                    // Небо
+                    else if (y < resolution.Y / 2)
+                    {
+                        float pixelX = Math.Abs((x + (rotation / 360 * resolution.X)) % scene.skyImg.Size.X);
+                        color = scene.skyImg.GetPixel((uint)pixelX, (uint)(y % scene.skyImg.Size.Y));
+                    }
+
+                    // Пол
+                    else if (y > resolution.Y / 2)
+                    {
+                        color = Multiply(new Color(52, 40, 38), (float)Math.Pow((float)y / (float)resolution.Y - 0.5f, scene.lightIntensity/2f));
+                    }
+
                     returnImage.SetPixel((uint)x, (uint)y, color);
                 }
                 #endregion
             });
             return returnImage;
         }
+        public static Color Multiply(Color a, float b) => new Color((byte)((float)a.R * b), (byte)((float)a.G * b), (byte)((float)a.B * b));
     }
 }

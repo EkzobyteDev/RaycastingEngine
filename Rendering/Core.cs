@@ -27,8 +27,8 @@ namespace RaycastingEngine
             camera = new Camera();
 
             camera.fov = 45;
-            camera.pos = new AVector2f(0, 0);
-            camera.rot = 0;
+            camera.position = AVector2f.zero;
+            camera.rotation = 0;
             camera.resolution = windowSize;
             camera.renderDist = 100;
 
@@ -50,6 +50,7 @@ namespace RaycastingEngine
 
             sceneImporter = new SceneImporter();
             sceneImporter.CreateScene();
+            sceneImporter.scene.LoadTextures();
             Mesh cube = sceneImporter.scene.meshes[0];
 
             #endregion
@@ -63,9 +64,6 @@ namespace RaycastingEngine
             float deltaTime = 0; // Время, за которое рендерится кдр
             float time;
 
-            Music music = new Music("D:/Projects/Git/RaycastingEngine/Scene/Sounds/Music.wav");
-            //music.Play();
-
             while (window.IsOpen)
             {
                 window.DispatchEvents();
@@ -76,8 +74,9 @@ namespace RaycastingEngine
 
                 #region Обновление сцены
 
-                cube.rot = time * 45;
-                sceneImporter.scene.meshes[2].pos.x = (float)Math.Sin(time) * 2 + 1.5f;
+                //cube.rotation = time * 45;
+                //sceneImporter.scene.meshes[2].position.x = (float)Math.Sin(time) * 2 + 1.5f;
+                //cube.scale = (float)Math.Abs(Math.Sin(time)) * 1;
 
                 #endregion
 

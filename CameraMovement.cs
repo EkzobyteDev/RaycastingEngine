@@ -17,12 +17,12 @@ namespace RaycastingEngine
         internal void Update(float deltaTime)
         {
             AVector2f inputDir = Controls.inputDirection;
-            inputDir = MathV.Rotate(inputDir, camera.rot).normalized;
-            camera.pos += inputDir * 2 * deltaTime;
+            inputDir = MathV.Rotate(inputDir, camera.rotation).normalized;
+            camera.position += inputDir * 2 * deltaTime;
 
             float mouseDelta = Controls.mousePos.X - mousePos.X;
             Mouse.SetPosition(mousePos);
-            camera.rot += mouseDelta * 3 * deltaTime;
+            camera.rotation += mouseDelta * 3 * deltaTime;
         }
     }
 }

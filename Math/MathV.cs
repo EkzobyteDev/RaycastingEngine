@@ -16,7 +16,9 @@ namespace RaycastingEngine
         public static AVector2f operator +(AVector2f a, AVector2f b) => new AVector2f(a.x + b.x, a.y + b.y);
         public static AVector2f operator -(AVector2f a, AVector2f b) => new AVector2f(a.x - b.x, a.y - b.y);
         public static AVector2f operator *(AVector2f a, float b) => new AVector2f(a.x * b, a.y * b);
+        public static AVector2f operator *(float b, AVector2f a) => new AVector2f(a.x * b, a.y * b);
         public static AVector2f operator /(AVector2f a, float b) => new AVector2f(a.x / b, a.y / b);
+        public static AVector2f operator /(float b, AVector2f a) => new AVector2f(a.x / b, a.y / b);
 
         public float x;
         public float y;

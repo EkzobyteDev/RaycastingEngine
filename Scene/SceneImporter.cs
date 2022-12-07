@@ -14,7 +14,9 @@ namespace RaycastingEngine
 
             // Квадрат
             scene.meshes[0] = new Mesh(4);
-            scene.meshes[0].pos = new AVector2f(2, 0);
+            scene.meshes[0].textureName = "StoneFloor_1";
+            scene.meshes[0].position = new AVector2f(2, 0);
+            scene.meshes[0].scale = 1;
             scene.meshes[0].points = new AVector2f[]
             {
                 new AVector2f(-0.5f, 0.5f),
@@ -32,7 +34,9 @@ namespace RaycastingEngine
 
             // Треугольник
             scene.meshes[1] = new Mesh(3);
-            scene.meshes[1].pos = new AVector2f(-2, -2);
+            scene.meshes[1].textureName = "StoneFloor_2";
+            scene.meshes[1].position = new AVector2f(-2, -2);
+            scene.meshes[1].scale = 2;
             scene.meshes[1].points = new AVector2f[]
             {
                 new AVector2f(0, 1),
@@ -48,7 +52,9 @@ namespace RaycastingEngine
 
             // Отрезок
             scene.meshes[2] = new Mesh(1);
-            scene.meshes[2].pos = new AVector2f(-1.5f, 2);
+            scene.meshes[2].textureName = "StoneFloor_3";
+            scene.meshes[2].position = new AVector2f(-1.5f, 2);
+            scene.meshes[2].scale = 100;
             scene.meshes[2].points = new AVector2f[]
             {
                 new AVector2f(-0.5f, 0),

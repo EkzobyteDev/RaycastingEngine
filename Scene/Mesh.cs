@@ -4,8 +4,11 @@ namespace RaycastingEngine
 {
     internal class Mesh
     {
-        internal AVector2f pos;
-        internal float rot;
+        internal AVector2f position;
+        internal float rotation;
+        internal float scale;
+
+        internal string textureName;
 
         internal AVector2f[] points;
         internal Edge[] edges;
