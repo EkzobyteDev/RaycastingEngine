@@ -11,8 +11,8 @@ namespace RaycastingEngine
             {
                 AVector2f inputDir;
 
-                if (Keyboard.IsKeyPressed(Keyboard.Key.D)) inputDir.y = 1;
-                else if (Keyboard.IsKeyPressed(Keyboard.Key.A)) inputDir.y = -1;
+                if (Keyboard.IsKeyPressed(Keyboard.Key.D)) inputDir.y = -1;
+                else if (Keyboard.IsKeyPressed(Keyboard.Key.A)) inputDir.y = 1;
                 else inputDir.y = 0;
 
                 if (Keyboard.IsKeyPressed(Keyboard.Key.W)) inputDir.x = 1;
@@ -22,6 +22,17 @@ namespace RaycastingEngine
                 return inputDir;
             }
         }
-        internal static Vector2i mousePos { get { return Mouse.GetPosition(); } }
+
+
+        internal static bool lockCursor = true;
+        internal static Vector2i mouseDelta { get; private set; }
+        internal static void Handle(Vector2i resolution)
+        {
+            if (lockCursor)
+            {
+                mouseDelta = Mouse.GetPosition() - resolution/2;
+                Mouse.SetPosition(resolution / 2);
+            }
+        }
     }
 }

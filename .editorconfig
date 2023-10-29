@@ -88,6 +88,12 @@ dotnet_naming_style.pascal_case.required_suffix =
 dotnet_naming_style.pascal_case.word_separator = 
 dotnet_naming_style.pascal_case.capitalization = pascal_case
 
+# CS8618: Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
+dotnet_diagnostic.CS8618.severity = none
+
+# CS0108: Член скрывает унаследованный член: отсутствует новое ключевое слово
+dotnet_diagnostic.CS0108.severity = none
+
 [*.vb]
 #### Стили именования ####
 

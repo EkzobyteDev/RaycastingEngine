@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Projects\\Git\\RaycastingEngine\\RaycastingEngine.csproj",
+      "projectUniqueName": "D:\\Projects\\RaycastingEngine\\RaycastingEngine.csproj",
       "projectName": "RaycastingEngine",
-      "projectPath": "D:\\Projects\\Git\\RaycastingEngine\\RaycastingEngine.csproj",
+      "projectPath": "D:\\Projects\\RaycastingEngine\\RaycastingEngine.csproj",
       "packagesPath": "C:\\Users\\vx220\\.nuget\\packages\\",
-      "outputPath": "D:\\Projects\\Git\\RaycastingEngine\\obj\\",
+      "outputPath": "D:\\Projects\\RaycastingEngine\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\vx220\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -2,22 +2,22 @@
 using SFML.Graphics;
 
 
-#pragma warning disable CS8618
 namespace RaycastingEngine
 {
-    public class Camera
+    public class Camera : SceneObject
     {
-        // Физические параметры камеры
-        public AVector2f position;
-        public float rotation;
-        internal Vector2f size;
-
-        // Параметры, отвечающие за отрисовку
+        // Render parametres
         internal Vector2u resolution;
         internal float fov;
         internal float renderDist;
 
-        internal bool expandTextures = false;
+        public bool expandTextures = false;
+        public bool useFishEyeEffect = false; // To disable the 'fish eye' effect, you should divide ray distance by cos of angle btw the ray and the camera
+
+
+        Ray[] rays;
+
+
 
         public Camera() { }
         public Camera(AVector2f pos, float rot)
@@ -35,115 +35,93 @@ namespace RaycastingEngine
             this.renderDist = renderDist;
         }
 
-        internal Image Render(Scene scene)
+
+
+        public void Initialise()
         {
-            Image returnImage = new Image(resolution.X, resolution.Y);
+            uint raysCount = resolution.X;
+            float angleBtwRays = fov / raysCount;
 
-            #region Подготовка некоторых полей
-            AVector2f norm = MathV.Rotate(AVector2f.right, rotation); // Camera look in the direction of this vector
-
-            // r и l - точки, между которыми смотрит камера
-            AVector2f r = MathV.Rotate(norm, fov / 2).normalized * renderDist + position;
-            AVector2f l = MathV.Rotate(norm, 360 - (fov / 2)).normalized * renderDist + position;
-            #endregion
-
-            Parallel.For(0, resolution.X, (x) =>
-            {
-                #region Нахождение точек пересечения с объектами на сцене и получение некоторых важных параметров
-                // p1 и p2 - крайние точки, "луча", который мы пускаем
-                AVector2f p1 = position;
-                AVector2f p2 = (r - l) * (((float)x / (float)resolution.X) - (1 / ((float)resolution.X * 2))) + l;
-                float minM = 0;
-
-                float minDist = float.PositiveInfinity;
-                Image image = scene.defaultImg;
-
-                foreach (Mesh mesh in scene.meshes)
-                {
-                    foreach (Edge edge in mesh.edges)
-                    {
-                        AVector2f p3 = MathV.Rotate(mesh.points[edge.p1], mesh.rotation) * mesh.scale + mesh.position;
-                        AVector2f p4 = MathV.Rotate(mesh.points[edge.p2], mesh.rotation) * mesh.scale + mesh.position;
-
-                        // n и m - множители, подставив которые в уравнения прямых, получим точку на них
-                        float n = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) /
-                                  ((p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x));
-
-                        float m = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) /
-                                  ((p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x));
-
-
-                        // принадлежит ли точка пересечения "лучу" и ребру
-                        if (n < 0 || n > 1 || m < 0 || m > 1) continue;
-
-                        AVector2f intersectionPoint = new AVector2f(p1.x + n * (p2.x - p1.x), p1.y + n * (p2.y - p1.y));
-                        float dist = (intersectionPoint - position).length;
-
-                        // Находим минимальную точку пересечения
-                        if (dist < minDist)
-                        {
-                            minDist = dist;
-                            minM = expandTextures ? m : m * (p4 - p3).length;
-                            image = scene.images[mesh.textureName];
-                        }
-                    }
-                }
-                // Умножаем дистанцию до объекта на косинус угла между лучом и направлением взгляда камеры.
-                // Нужно, чтобы избавиться от эффекта "рыбьего глаза"
-                minDist = Math.Clamp(minDist, 0.01f, float.PositiveInfinity);
-                float cos = MathV.Cos(p2, norm);
-                if (cos > 0) minDist *= cos;
-
-                float invDist = 1 / minDist;
-                #endregion
-
-                #region Отрисовка изображения на основе полученных данных
-                // height - это высота (в пикселях) столбца, который будет отрисован на экране
-                int height;
-
-                if (minDist == renderDist) height = 0; // Не попали ни в один объект
-                else height = (int)(resolution.Y * invDist);
-
-                // gap - это высота пустоты (в пикселях)
-                int gap = (int)((resolution.Y - height) / 2);
-
-                //Вывод столбца в текстуру
-
-                for (int y = 0; y < resolution.Y; y++)
-                {
-                    Color color = Color.Black;
-                    // Стены
-                    if (y >= gap && y <= gap + height)
-                    {
-                        // Самое простое затенение. Чем объект дальше, тем он темнее
-                        float channel = Math.Clamp(invDist * scene.lightIntensity, 0, 1);
-
-                        float Pixelx = expandTextures ? image.Size.X * minM : (image.Size.X * minM) % image.Size.X;
-                        float Pixely = ((float)image.Size.Y / (float)height * (float)(y - gap)) % image.Size.Y;
-                        color = image.GetPixel((uint)Pixelx, (uint)Pixely);
-                        color = Multiply(color, channel);
-
-                    }
-
-                    // Небо
-                    else if (y < resolution.Y / 2)
-                    {
-                        float pixelX = Math.Abs((x + (rotation / 360 * resolution.X)) % scene.skyImg.Size.X);
-                        color = scene.skyImg.GetPixel((uint)pixelX, (uint)(y % scene.skyImg.Size.Y));
-                    }
-
-                    // Пол
-                    else if (y > resolution.Y / 2)
-                    {
-                        color = Multiply(new Color(52, 40, 38), (float)Math.Pow((float)y / (float)resolution.Y - 0.5f, scene.lightIntensity/2f));
-                    }
-
-                    returnImage.SetPixel((uint)x, (uint)y, color);
-                }
-                #endregion
-            });
-            return returnImage;
+            rays = new Ray[raysCount];
+            for (int i = 0; i < raysCount; i++)
+                rays[i] = new Ray();
         }
+
+
+        internal void Render(Image frame)
+        {
+            Parallel.For(0, rays.Length, i =>
+            //for (int i = 0; i < rays.Length; i++)
+            {
+                float angleBtwRays = fov / rays.Length;
+                float rayAngle = rotation + (fov / 2) - angleBtwRays * i;
+                float rayLengthCorrection = useFishEyeEffect ? 1 : (float)Math.Cos((rayAngle - rotation) * Math.PI / 180);
+                float rayDist = renderDist / rayLengthCorrection;
+
+
+
+                rays[i].SetPoints(Ray.PointsFromRay(position, MathV.DirectionVector(rayAngle), rayDist));
+
+                Color[] result = RenderRay(i, rayLengthCorrection);
+                for (int j = 0; j < resolution.Y; j++)
+                {
+                    frame.SetPixel((uint)i, (uint)j, result[j]);
+                }
+            });
+        }
+
+        // A vertical line from top (id = 0) to bottom (id = resolution.y)
+        Color[] RenderRay(int rayID, float heightCorrection)
+        {
+            List<(float distance, int edgeID, Mesh mesh, float f)> rayCollisions = GetRayCollisions(rays[rayID]);
+
+            Color[] result = new Color[resolution.Y];
+
+            if (rayCollisions.Count == 0) return result;
+
+
+            int height = (int)Math.Round(resolution.Y * (1 / rayCollisions[0].distance) / heightCorrection); // Height of a column
+            int top = (int)Math.Round((resolution.Y - height) / 2f); // Highest point of column
+            int bottom = top + height; // Lowest point of column
+
+            for (int i = Math.Max(0, top); i < Math.Min(resolution.Y, bottom); i++)
+            {
+                byte value = (byte)(rayCollisions[0].f * 255);
+                result[i] = new Color(value, (byte)(value * 2), (byte)(value / 2));
+            }
+
+            return result;
+        }
+
+        // Returns info about all collisions of ray
+        // Does not use culling
+        List<(float distance, int edgeID, Mesh mesh, float f)> GetRayCollisions(Ray ray)
+        {
+            List<(float distance, int edgeID, Mesh mesh, float f)> collisions = new List<(float, int, Mesh, float)>();
+
+            string s = "";
+            foreach (Mesh mesh in Scene.instance.meshes)
+            {
+                for (int i = 0; i < mesh.edges.Length; i++)
+                {
+                    (bool exists, AVector2f point, float f) intersection = ray.GetIntersectionPoint_ParametricEquations(mesh.points[mesh.edges[i].p1] + mesh.position, mesh.points[mesh.edges[i].p2] + mesh.position);
+
+                    s += intersection.exists + " " + intersection.point + " || ";
+
+                    if (intersection.exists)
+                        collisions.Add(((intersection.point - position).length, i, mesh, intersection.f));
+                }
+            }
+
+            //if (id > 1920 / 2 - 10 && id < 1920 / 2 + 10)
+            //    Core.Log(id + " " + collisions.Count + " p1: " + ray.p1 + " p2: " + ray.p2 + "      S: "+s);
+
+            return collisions.OrderBy(collision => collision.distance).ToList();
+        }
+
+
+
+
         public static Color Multiply(Color a, float b) => new Color((byte)((float)a.R * b), (byte)((float)a.G * b), (byte)((float)a.B * b));
     }
 }

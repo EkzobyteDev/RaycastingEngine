@@ -28,6 +28,7 @@ namespace RaycastingEngine
             this.x = x;
             this.y = y;
         }
+
         public Vector2f toSFMLVec
         {
             get
@@ -58,6 +59,11 @@ namespace RaycastingEngine
                 return new AVector2f(x / this.length, y / this.length);
             }
         }
+
+        public override string ToString()
+        {
+            return $"({x.ToString("0.0000")} ; {y.ToString("0.0000")})";
+        }
     }
 
     // MathV = vector math
@@ -75,5 +81,12 @@ namespace RaycastingEngine
         {
             return (a.x * b.x + a.y * b.y) / a.length * b.length;
         }
+
+        public static AVector2f DirectionVector(float angle)
+        {
+            angle *= (float)Math.PI / 180f;
+            return new AVector2f((float)Math.Cos(angle), (float)Math.Sin(angle));
+        }
+
     }
 }

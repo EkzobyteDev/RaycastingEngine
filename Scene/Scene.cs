@@ -2,27 +2,27 @@
 
 namespace RaycastingEngine
 {
-    internal class Scene
+    public class Scene
     {
-        internal Image defaultImg;
-        internal Image skyImg;
-        internal Dictionary<string, Image> images;
+        public static Scene instance { get; set; }
 
-        internal float lightIntensity = 1.5f;
-        internal Mesh[] meshes;
+        public List<Mesh> meshes = new List<Mesh>();
 
-        internal void LoadTextures()
-        {
-            defaultImg = new Image(Environment.CurrentDirectory + "/Textures/0.jpg");
-            skyImg = new Image(Environment.CurrentDirectory + "/Textures/Sky.jpg");
 
-            images = new Dictionary<string, Image>();
-            foreach (Mesh mesh in meshes)
-            {
-                if (images.Keys.Contains(mesh.textureName)) continue;
 
-                images[mesh.textureName] = new Image(Environment.CurrentDirectory + $"/Textures/{mesh.textureName}.jpg");
-            }
-        }
+
+        //public void LoadTextures()
+        //{
+        //    defaultImg = new Image(Environment.CurrentDirectory + "/Textures/0.jpg");
+        //    skyImg = new Image(Environment.CurrentDirectory + "/Textures/Sky.jpg");
+
+        //    images = new Dictionary<string, Image>();
+        //    foreach (Mesh mesh in meshes)
+        //    {
+        //        if (images.Keys.Contains(mesh.textureName)) continue;
+
+        //        images[mesh.textureName] = new Image(Environment.CurrentDirectory + $"/Textures/{mesh.textureName}.jpg");
+        //    }
+        //}
     }
 }

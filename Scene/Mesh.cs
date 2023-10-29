@@ -1,31 +1,28 @@
 ﻿
+using SFML.Graphics;
+
+
+
 
 namespace RaycastingEngine
 {
-    internal class Mesh
+    public class Mesh : SceneObject
     {
-        internal AVector2f position;
-        internal float rotation;
-        internal float scale;
+        public AVector2f[] points;
+        public (int p1, int p2)[] edges;
 
-        internal string textureName;
+        public Texture[] textures;
 
-        internal AVector2f[] points;
-        internal Edge[] edges;
 
-        public Mesh(int edgeCount)
+        public Mesh(int edgeCount, params string[] textureNames)
         {
-            this.edges = new Edge[edgeCount];
-        }
-    }
-    internal class Edge
-    {
-        internal int p1, p2;
+            this.edges = new (int p1, int p2)[edgeCount];
 
-        public Edge(int p1, int p2)
-        {
-            this.p1 = p1;
-            this.p2 = p2;
+            textures = new Texture[textureNames.Length];
+            for (int i = 0; i < textureNames.Length; i++)
+            {
+                textures[i] = new Texture(Core.texturesPath + textureNames[i]);
+            }
         }
     }
 }
