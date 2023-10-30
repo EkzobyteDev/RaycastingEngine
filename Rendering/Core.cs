@@ -9,7 +9,7 @@ namespace RaycastingEngine
 {
     public class Core
     {
-        public static string texturesPath = @"D:\Projects\RaycastingEngine\Assets\Textures\";
+        public static string texturesPath = Environment.CurrentDirectory + @"\Assets\Textures\";
 
         static RenderWindow window;
         static Vector2u windowResolution = new Vector2u(1920, 1080);
@@ -157,13 +157,19 @@ namespace RaycastingEngine
             scene = new Scene();
             Scene.instance = scene;
 
-            Mesh mesh = new Mesh(4, "Brick.png");
+            Mesh mesh = new Mesh(4, "Brick_1.png");
             mesh.points = new AVector2f[] { new AVector2f(0, 0), new AVector2f(1, 0), new AVector2f(1, 1), new AVector2f(0, 1) };
             mesh.edges = new (int p1, int p2)[] { (0, 1), (1, 2), (2, 3), (3, 0) };
             mesh.position = new AVector2f(10, 0);
 
+            Mesh mesh1 = new Mesh(4, "Brick_1.png");
+            mesh1.points = new AVector2f[] { new AVector2f(0, 0), new AVector2f(1, 0), new AVector2f(1, 1), new AVector2f(0, 1) };
+            mesh1.edges = new (int p1, int p2)[] { (0, 1), (1, 2), (2, 3), (3, 0) };
+            mesh1.position = new AVector2f(15, 0);
+
 
             scene.meshes.Add(mesh);
+            scene.meshes.Add(mesh1);
         }
         static void CreateCamera()
         {

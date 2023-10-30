@@ -77,19 +77,37 @@ namespace RaycastingEngine
 
             Color[] result = new Color[resolution.Y];
 
-            if (rayCollisions.Count == 0) return result;
 
-
-            int height = (int)Math.Round(resolution.Y * (1 / rayCollisions[0].distance) / heightCorrection); // Height of a column
-            int top = (int)Math.Round((resolution.Y - height) / 2f); // Highest point of column
-            int bottom = top + height; // Lowest point of column
-
-            for (int i = Math.Max(0, top); i < Math.Min(resolution.Y, bottom); i++)
+            for (int i = rayCollisions.Count - 1; i >= 0; i--)
             {
-                byte value = (byte)(rayCollisions[0].f * 255);
-                result[i] = new Color(value, (byte)(value * 2), (byte)(value / 2));
-            }
+                int height = (int)Math.Round(resolution.Y * (1 / rayCollisions[i].distance) / heightCorrection); // Height of a column
+                int top = (int)Math.Round((resolution.Y - height) / 2f); // Highest point of column
+                int bottom = top + height; // Lowest point of column
 
+                Image img = rayCollisions[i].mesh.textures[0];
+                for (int y = 0; y < resolution.Y; y++)
+                {
+                    Color color = Color.Transparent;
+
+                    if (y >= top && y < bottom)
+                    {
+                        // textureX = x size of texture / length of edge * position on edge
+                        // textureY = y size of texture / height of column * position on column
+
+                        (int p1, int p2) edge = rayCollisions[i].mesh.edges[rayCollisions[i].edgeID];
+                        float textureX = (float)img.Size.X / (rayCollisions[i].mesh.points[edge.p1] - rayCollisions[i].mesh.points[edge.p2]).length * rayCollisions[i].f;
+                        float textureY = (float)img.Size.Y / (float)height * (y - top);
+                        color = img.GetPixel((uint)textureX, (uint)textureY);
+                    }
+
+                    if (result[y] == Color.Transparent)
+                        result[y] = color;
+                    else
+                        result[y] = Blend(color, result[y]);
+
+                    //result[y] = color;
+                }
+            }
             return result;
         }
 
@@ -113,9 +131,6 @@ namespace RaycastingEngine
                 }
             }
 
-            //if (id > 1920 / 2 - 10 && id < 1920 / 2 + 10)
-            //    Core.Log(id + " " + collisions.Count + " p1: " + ray.p1 + " p2: " + ray.p2 + "      S: "+s);
-
             return collisions.OrderBy(collision => collision.distance).ToList();
         }
 
@@ -123,5 +138,20 @@ namespace RaycastingEngine
 
 
         public static Color Multiply(Color a, float b) => new Color((byte)((float)a.R * b), (byte)((float)a.G * b), (byte)((float)a.B * b));
+        public static Color Blend(Color a, Color b)
+        {
+            // Formula was taken from
+            // https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
+
+            float aA = a.A / 255f;
+            float bA = b.A / 255f;
+
+            float red = a.R * aA + b.R * bA * (1 - aA);
+            float green = a.G * aA + b.G * bA * (1 - aA);
+            float blue = a.B * aA + b.B * bA * (1 - aA);
+            float alfa = aA + bA * (1 - aA);
+            alfa *= 255;
+            return new Color((byte)red, (byte)green, (byte)blue, (byte)alfa);
+        }
     }
 }
