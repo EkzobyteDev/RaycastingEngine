@@ -22,6 +22,11 @@ namespace RaycastingEngine
                 return inputDir;
             }
         }
+        static bool wasPressed0;
+        static bool wasPressed1;
+        static bool wasPressed2;
+        static bool wasPressed3;
+        static bool wasPressed4;
 
 
         internal static bool lockCursor = true;
@@ -33,6 +38,22 @@ namespace RaycastingEngine
                 mouseDelta = Mouse.GetPosition() - resolution/2;
                 Mouse.SetPosition(resolution / 2);
             }
+
+
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Num0) && wasPressed0 == false) Core.showHelpMenu = !Core.showHelpMenu;
+            wasPressed0 = Keyboard.IsKeyPressed(Keyboard.Key.Num0);
+
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Num1) && wasPressed1 == false) Camera.noHeight = !Camera.noHeight;
+            wasPressed1 = Keyboard.IsKeyPressed(Keyboard.Key.Num1);
+
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Num2) && wasPressed2 == false) Camera.useFishEyeEffect = !Camera.useFishEyeEffect;
+            wasPressed2 = Keyboard.IsKeyPressed(Keyboard.Key.Num2);
+
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Num3) && wasPressed3 == false) Camera.noTextures = !Camera.noTextures;
+            wasPressed3 = Keyboard.IsKeyPressed(Keyboard.Key.Num3);
+
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Num4) && wasPressed4 == false) Camera.noTransparency = !Camera.noTransparency;
+            wasPressed4 = Keyboard.IsKeyPressed(Keyboard.Key.Num4);
         }
     }
 }

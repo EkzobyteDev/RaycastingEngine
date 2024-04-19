@@ -1,0 +1,10 @@
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\RaycastingEngine.exe
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\RaycastingEngine.dll
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\RaycastingEngine.deps.json
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\RaycastingEngine.runtimeconfig.json
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\RaycastingEngine.pdb
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\OpenTK.dll
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\sfml-audio.dll
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\sfml-graphics.dll
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\sfml-system.dll
+D:\Projects\RaycastingEngine\bin\Release\net6.0\publish\sfml-window.dll

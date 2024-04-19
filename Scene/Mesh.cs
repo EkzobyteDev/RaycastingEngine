@@ -8,13 +8,13 @@ namespace RaycastingEngine
 {
     public class Mesh : SceneObject
     {
-        public AVector2f[] points;
-        public (int p1, int p2)[] edges;
+        public AVector2f[] points; // Массив вершин (хранятся только координаты)
+        public (int p1, int p2)[] edges; // Массив рёбер (хранятся индексы соотверствующих ребру вершин)
 
-        public Image[] textures;
+        public Image[] textures; // Набор текстур
 
 
-        public Mesh(int edgeCount, params string[] textureNames)
+        public Mesh(int edgeCount, params string[] textureNames) // Создание меша
         {
             this.edges = new (int p1, int p2)[edgeCount];
 

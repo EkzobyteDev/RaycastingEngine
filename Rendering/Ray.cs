@@ -9,12 +9,12 @@ namespace RaycastingEngine
 {
     public class Ray
     {
-        public AVector2f p1;
-        public AVector2f p2;
+        public AVector2f p1; // Начало луча
+        public AVector2f p2; // Конец луча
 
 
 
-
+        // Создание луча разными способами
         public Ray() { }
         public Ray(AVector2f p1, AVector2f p2)
         {
@@ -33,24 +33,22 @@ namespace RaycastingEngine
             this.p2 = points.p2;
         }
 
-
-
+        // Установка лучу точек начала и конца
         public void SetPoints((AVector2f p1, AVector2f p2) points)
         {
             p1 = points.p1;
             p2 = points.p2;
         }
-        public static (AVector2f p1, AVector2f p2) PointsFromRay(AVector2f origin, AVector2f direction, float magnitude) => (origin, origin + direction.normalized * magnitude);
+
+        // Нахождение точек начала и конца из данных о начале луча, его направлении и длине
+        public static (AVector2f p1, AVector2f p2) PointsFromRay(AVector2f origin, AVector2f direction, float magnitude) 
+            => (origin, origin + direction.normalized * magnitude);
 
 
 
-
+        // Нахождение пересечения отрезков через параметрические уравнения
         internal (bool exists, AVector2f point, float f) GetIntersectionPoint_ParametricEquations(AVector2f e1, AVector2f e2)
         {
-            // This code was taken from
-            // https://habr.com/ru/articles/578110/
-
-
             float s = ((e1.x - p1.x) * (p2.y - p1.y) - (e1.y - p1.y) * (p2.x - p1.x)) / ((e2.y - e1.y) * (p2.x - p1.x) - (e2.x - e1.x) * (p2.y - p1.y));
             float r = (s * (e2.y - e1.y) + (e1.y - p1.y)) / (p2.y - p1.y);
 
@@ -60,6 +58,8 @@ namespace RaycastingEngine
 
             return (true, r * (p2 - p1) + p1, s);
         }
+
+        // Нахождение пересечения отрезков через линейные функции
         internal (bool intersectionExists, AVector2f intersectionPoint) GetIntersectionPoint_LineFunctions(AVector2f e1, AVector2f e2)
         {
             // Let`s represent the ray and the edge as linear functions

@@ -6,19 +6,25 @@ namespace RaycastingEngine
 {
     public class Camera : SceneObject
     {
-        // Render parametres
+        // Параметры отрисовки
         internal Vector2u resolution;
         internal float fov;
         internal float renderDist;
 
         public bool expandTextures = false;
-        public bool useFishEyeEffect = false; // To disable the 'fish eye' effect, you should divide ray distance by cos of angle btw the ray and the camera
 
+        // Чтобы отключить эффект "рыбьего глаза нужно умножить длину луча на косинус угла между лучом и камерой
+        public static bool useFishEyeEffect;
+        public static bool noHeight;
+        public static bool noTextures;
+        public static bool noTransparency;
 
+        // Массив лучей
         Ray[] rays;
 
 
 
+        // Создание камеры (используется метод Initialize
         public Camera() { }
         public Camera(AVector2f pos, float rot)
         {
@@ -36,8 +42,8 @@ namespace RaycastingEngine
         }
 
 
-
-        public void Initialise()
+        // Инициализация камеры
+        public void Initialize()
         {
             uint raysCount = resolution.X;
             float angleBtwRays = fov / raysCount;
@@ -48,10 +54,10 @@ namespace RaycastingEngine
         }
 
 
+        // Отрисовка кадра (использует метод RenderRay)
         internal void Render(Image frame)
         {
             Parallel.For(0, rays.Length, i =>
-            //for (int i = 0; i < rays.Length; i++)
             {
                 float angleBtwRays = fov / rays.Length;
                 float rayAngle = rotation + (fov / 2) - angleBtwRays * i;
@@ -70,24 +76,36 @@ namespace RaycastingEngine
             });
         }
 
-        // A vertical line from top (id = 0) to bottom (id = resolution.y)
+        // Отрисовка вертикальной линии, соответствующей лучу с индексом rayID (использует метод GetRayCollisions)
         Color[] RenderRay(int rayID, float heightCorrection)
         {
             List<(float distance, int edgeID, Mesh mesh, float f)> rayCollisions = GetRayCollisions(rays[rayID]);
 
             Color[] result = new Color[resolution.Y];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = Color.Transparent;
 
 
-            for (int i = rayCollisions.Count - 1; i >= 0; i--)
+            // Just white columns:
+            if (noHeight && rayCollisions.Count != 0)
             {
-                int height = (int)Math.Round(resolution.Y * (1 / rayCollisions[i].distance) / heightCorrection); // Height of a column
+                for (int i = 0; i < result.Length; i++)
+                    result[i] = Color.White;
+
+                return result;
+            }
+
+
+            for (int i = 0; i < rayCollisions.Count; i++)
+            {
+                int height = (int)Math.Round(resolution.Y / (rayCollisions[i].distance * heightCorrection)); // Height of a column
                 int top = (int)Math.Round((resolution.Y - height) / 2f); // Highest point of column
                 int bottom = top + height; // Lowest point of column
 
                 Image img = rayCollisions[i].mesh.textures[0];
                 for (int y = 0; y < resolution.Y; y++)
                 {
-                    Color color = Color.Transparent;
+                    Color color = Color.Black;
 
                     if (y >= top && y < bottom)
                     {
@@ -98,21 +116,23 @@ namespace RaycastingEngine
                         float textureX = (float)img.Size.X / (rayCollisions[i].mesh.points[edge.p1] - rayCollisions[i].mesh.points[edge.p2]).length * rayCollisions[i].f;
                         float textureY = (float)img.Size.Y / (float)height * (y - top);
                         color = img.GetPixel((uint)textureX, (uint)textureY);
+
+                        // Just white color
+                        if (noTextures) color = Color.White;
                     }
+
 
                     if (result[y] == Color.Transparent)
                         result[y] = color;
-                    else
-                        result[y] = Blend(color, result[y]);
-
-                    //result[y] = color;
+                    else if (noTransparency == false)
+                        result[y] = Blend(result[y], color); // We put down the color as we go from closest collision to furthest
                 }
             }
+
             return result;
         }
 
-        // Returns info about all collisions of ray
-        // Does not use culling
+        // Находит все пересечения луча с объектами сцены
         List<(float distance, int edgeID, Mesh mesh, float f)> GetRayCollisions(Ray ray)
         {
             List<(float distance, int edgeID, Mesh mesh, float f)> collisions = new List<(float, int, Mesh, float)>();
@@ -136,11 +156,10 @@ namespace RaycastingEngine
 
 
 
-
-        public static Color Multiply(Color a, float b) => new Color((byte)((float)a.R * b), (byte)((float)a.G * b), (byte)((float)a.B * b));
+        // Смешивание цветов
         public static Color Blend(Color a, Color b)
         {
-            // Formula was taken from
+            // Формула была взята:
             // https://en.wikipedia.org/wiki/Alpha_compositing#Alpha_blending
 
             float aA = a.A / 255f;
